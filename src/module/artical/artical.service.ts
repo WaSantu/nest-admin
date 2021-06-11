@@ -55,8 +55,8 @@ export class ArticalService {
 		let pagesize = 10
 		let total = await this.artical.count()
 		let skipNum = pagesize*(request.page - 1)
-		let hot_list = await this.artical.find({status:1,is_hot:1}).populate('user_id cover',{name:1,path:1})
-		let re = await this.artical.find({status:1,is_hot:0},null,{lean:true}).populate('user_id cover',{name:1,path:1}).skip(skipNum).limit(pagesize).exec()
+		let hot_list = await this.artical.find({status:1,is_hot:1}).populate('user_id cover category',{name:1,path:1,des:1})
+		let re = await this.artical.find({status:1,is_hot:0},null,{lean:true}).populate('user_id cover category',{name:1,path:1}).skip(skipNum).limit(pagesize).exec()
 		for(let val of re){
 			val["comment_count"] = await this.comment.find({artical_id:val._id}).count()
 		}
@@ -69,7 +69,7 @@ export class ArticalService {
 	async find_item(id:string){
 		return this.artical.findById(id).populate('cover')
 	}
-	async find_single(id: string,from:string,req?:Reqq) {
+	async find_single(id: string) {
 		return this.artical.aggregate([{
 			$match: {
 				_id: mongoose.Types.ObjectId(id),

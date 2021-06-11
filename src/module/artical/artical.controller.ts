@@ -45,4 +45,9 @@ export class ArticalController {
 	find(@Body('id') id){
 		return this.articalservice.find_item(id)
 	}
+
+	@Post('/item')
+	item(@Body('id') id){
+		return this.articalservice.find_single(id)
+	}
 }

@@ -3,6 +3,7 @@ import { CreateDto, GetListDto } from "./category-dto";
 import { CategoryService } from "./category.service";
 import { AuthGuard } from "@nestjs/passport";
 import { AddUserInterceptor } from "../../interceptor/user.interceptor";
+import { AddAdminInterceptor } from "../../interceptor/admin.interceptor";
 
 @Controller('category')
 export class CategoryController {
@@ -23,5 +24,12 @@ export class CategoryController {
 	@UseGuards(AuthGuard('jwt'))
 	async getCategory(@Body() request:GetListDto){
 		return this.categoryService.getCategory(request)
+	}
+
+	@Post('/findPapa')
+	@UseGuards(AuthGuard('jwt'))
+	@UseInterceptors(AddAdminInterceptor)
+	findPapa(@Body('id') id,@Body('floor') floor){
+		return this.categoryService.findPapa(id,floor)
 	}
 }

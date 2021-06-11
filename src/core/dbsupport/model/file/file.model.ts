@@ -16,7 +16,11 @@ export class File{
 	@prop()
 	md5:string
 	@prop()
+	fileType:number
+	@prop()
 	path:string
+	@prop()
+	realPath:string
 	@prop({ref:()=>User})
 	user_id:Ref<User>
 }

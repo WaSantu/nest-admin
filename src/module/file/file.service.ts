@@ -10,7 +10,7 @@ import { createWriteStream } from "fs";
 
 @Injectable()
 export class FileService {
-	public imgType:Array<string> = ['image/gif','image/png']
+	public imgType:Array<string> = ['image/gif','image/png','image/jpg','image/jpeg']
 	constructor(
 	  @InjectModel(File) private readonly file:ModelType<FileDocument>
 	) {
@@ -22,12 +22,19 @@ export class FileService {
 			return is_exits
 		}
 		let targetDir
+		let fileType
 		if(this.imgType.indexOf(file.mimetype) != -1){
 			targetDir = 'img'
+			fileType=0
 		}else{
 			targetDir = 'media'
+			fileType=1
 		}
 		let time = moment().format('YYYY-MM-DD')
+		let wrapperPath = join(__dirname,'../../',`upload`,targetDir)
+		if(!fs.existsSync(wrapperPath)){
+			fs.mkdirSync(wrapperPath)
+		}
 		let dirPath = join(__dirname,'../../',`upload`,targetDir,time)
 		let checkDir = fs.existsSync(dirPath)
 		if(!checkDir){
@@ -36,9 +43,12 @@ export class FileService {
 		let writeFile = createWriteStream(`${dirPath}\\${file.originalname}`)
 		writeFile.write(file.buffer)
 		const publicPath = `/static/${targetDir}/${time}`
+		const realPath = `${dirPath}\\${file.originalname}`
 		return await this.file.create({
 			name: file.originalname,
+			fileType:fileType,
 			path: `${publicPath}/${file.originalname}`,
+			realPath : realPath,
 			md5: fileMd5,
 			user_id: user.id
 		})
@@ -47,7 +57,7 @@ export class FileService {
 	async delete(ids) {
 		let filePathes = await this.file.find({_id:{$in:ids}})
 		for(let val of filePathes){
-			fs.unlinkSync(val.path)
+			fs.unlinkSync(val.realPath)
 		}
 		return this.file.deleteMany({_id:{$in:ids}})
 	}
@@ -55,7 +65,10 @@ export class FileService {
 	async list(request){
 		let query = {}
 		if(request.keywords){
-			query = {name:{$regex:request.keywords}}
+			Object.assign(query,{name:{$regex:request.keywords}})
+		}
+		if(request.type || request.type === 0){
+			Object.assign(query,{fileType:request.type})
 		}
 		let total = await this.file.find(query).count()
 		let pagesize = 12
